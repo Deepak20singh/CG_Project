@@ -30,13 +30,11 @@ public class BookingService {
                     .body("Error: Flight " + dto.getFlightNumber() + " does not exist!");
         }
 
-        // Check if available seats are greater than requested seat number
         if (dto.getSeatNumber() > flight.getSeats()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error: Only " + flight.getSeats() + " seats are available!");
         }
 
-        // Create Booking Entry
         BookingModel booking = new BookingModel();
         booking.setSeatNumber(dto.getSeatNumber());
         booking.setFlightNumber(dto.getFlightNumber());
