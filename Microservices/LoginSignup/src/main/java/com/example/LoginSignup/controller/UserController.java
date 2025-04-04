@@ -18,7 +18,7 @@ public class UserController {
         return userService.signup(dto);
     }
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserDTO dto) {  // ✅ Using @RequestBody instead of @RequestParam
+    public ResponseEntity<?> login(@RequestBody UserDTO dto) {
         return userService.login(dto.getEmail(), dto.getPassword());
     }
 }

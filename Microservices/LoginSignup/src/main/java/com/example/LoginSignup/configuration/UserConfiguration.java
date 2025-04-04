@@ -26,7 +26,11 @@ public class UserConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/signup", "/auth/login").permitAll()
                         .anyRequest().authenticated()
-                );
+
+                )
+                .formLogin().disable()  // 🔴 Disable form-based login
+                .httpBasic().disable();
+
         return http.build();
     }
     @Bean
