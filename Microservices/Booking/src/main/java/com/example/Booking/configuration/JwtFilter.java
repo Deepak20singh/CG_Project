@@ -1,4 +1,4 @@
-package com.example.fareAdmin.configuration;
+package com.example.Booking.configuration;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

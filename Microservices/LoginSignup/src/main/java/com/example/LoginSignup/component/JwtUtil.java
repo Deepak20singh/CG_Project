@@ -16,7 +16,7 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    private final String SECRET_KEY = "ThisIsASecretKeyWithAtLeast32Chars!"; // 32+ char hone chahiye
+    private final String SECRET_KEY = "ThisIsASecretKeyWithAtLeast32Chars!";
 
     private Key getSignKey() {
         byte[] keyBytes = Base64.getEncoder().encode(SECRET_KEY.getBytes());
@@ -32,13 +32,13 @@ public class JwtUtil {
                 .setSubject(user.getUserName())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
-                .signWith(getSignKey(), SignatureAlgorithm.HS256) // ✅ FIXED
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public Claims extractClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(getSignKey()) // ✅ FIXED
+                .setSigningKey(getSignKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

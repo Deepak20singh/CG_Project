@@ -40,7 +40,6 @@ public class Controller {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-
     @GetMapping("/flights")
     public ResponseEntity<List<DTO>> getFlights(@RequestParam(required = false) String departure,@RequestParam(required = false) String arrival){
         return flightService.getFlightLocation(departure,arrival);
