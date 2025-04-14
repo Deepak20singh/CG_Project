@@ -1,9 +1,13 @@
 package com.example.Booking.service;
 
+import com.example.Booking.configuration.RabbitMQConfig;
+import com.example.Booking.connection.UserContext;
 import com.example.Booking.dto.BookingDTO;
+import com.example.Booking.dto.EmailDTO;
 import com.example.Booking.model.BookingModel;
 import com.example.Booking.repository.BookingRepository;
 import com.example.Booking.dto.DTO;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,11 +21,15 @@ import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
-    @Autowired
-    private BookingRepository bookingRepository;
-
+    private final BookingRepository bookingRepository;
+    private final RabbitTemplate rabbitTemplate;
     private final RestTemplate restTemplate = new RestTemplate();
 
+    @Autowired
+    public BookingService(BookingRepository bookingRepository, RabbitTemplate rabbitTemplate) {
+        this.bookingRepository = bookingRepository;
+        this.rabbitTemplate = rabbitTemplate;
+    }
     public ResponseEntity<String> add(BookingDTO dto) {
         DTO flight = getFlightDetails(dto.getFlightNumber());
 
@@ -44,6 +52,13 @@ public class BookingService {
         booking.setGender(dto.getGender());
 
         bookingRepository.save(booking);
+        EmailDTO emailDTO = new EmailDTO();
+        emailDTO.setTo(UserContext.getEmail());  
+        emailDTO.setSubject("Booking Confirmation - " + dto.getFlightNumber());
+        emailDTO.setBody("Hi " + dto.getFirstName() + ", your booking for flight " + dto.getFlightNumber() + " is confirmed."+"AT seat:-"+dto.getSeatNumber());
+
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_QUEUE, emailDTO);
+
 
         return ResponseEntity.ok("Booking confirmed for Flight: " + dto.getFlightNumber());
     }
@@ -59,6 +74,16 @@ public class BookingService {
     public ResponseEntity<String> deleting(Long id){
         if(bookingRepository.existsById(id)){
             bookingRepository.deleteById(id);
+
+            EmailDTO emailDTO=new EmailDTO();
+            emailDTO.setTo(UserContext.getEmail());
+            emailDTO.setSubject("Booking Cancel ");
+            emailDTO.setBody("Hii, your flight booking has been successfully cancelled!!" +
+                    "Thank you for choosing us...");
+
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_QUEUE,emailDTO);
+
+
             return ResponseEntity.ok("Booking Cancelled!!");
         }else{
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking Not Found!!!");

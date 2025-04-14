@@ -24,6 +24,7 @@ public class SecurityConfiguration {
 http.csrf(csrf->csrf.disable())
         .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/users/add").hasAnyRole("USER", "ADMIN")
+                .requestMatchers("/error").permitAll() // /error ko open karo
                 .anyRequest().authenticated()
         ).addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 return http.build();

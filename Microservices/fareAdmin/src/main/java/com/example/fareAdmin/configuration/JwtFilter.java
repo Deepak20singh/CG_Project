@@ -39,7 +39,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String username = null;
         String role = null;
         String token = null;
-
+        String mail=null;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
             try {
@@ -51,6 +51,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 username = claims.getSubject();
                 role = (String) claims.get("role");
+                mail=(String) claims.get("email");
 
             } catch (io.jsonwebtoken.ExpiredJwtException e) {
                 System.out.println("JWT Expired: " + e.getMessage());

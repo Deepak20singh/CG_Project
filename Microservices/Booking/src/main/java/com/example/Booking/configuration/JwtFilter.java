@@ -1,5 +1,6 @@
 package com.example.Booking.configuration;
 
+import com.example.Booking.connection.UserContext;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.SignatureException;
@@ -38,6 +39,7 @@ public class JwtFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         String username = null;
         String role = null;
+        String mail=null;
         String token = null;
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -51,6 +53,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 username = claims.getSubject();
                 role = (String) claims.get("role");
+                mail=(String) claims.get("email");
 
             } catch (io.jsonwebtoken.ExpiredJwtException e) {
                 System.out.println("JWT Expired: " + e.getMessage());
@@ -66,8 +69,8 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
-
+            SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role.toUpperCase());
+            UserContext.setEmail(mail);
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(username, null, Collections.singletonList(authority));
 
