@@ -28,7 +28,7 @@ public class UserConfiguration {
                         .anyRequest().authenticated()
 
                 )
-                .formLogin().disable()  // 🔴 Disable form-based login
+                .formLogin().disable()  //  Disable form-based login
                 .httpBasic().disable();
 
         return http.build();

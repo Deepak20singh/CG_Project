@@ -38,13 +38,17 @@ public class BookingService {
                     .body("Error: Flight " + dto.getFlightNumber() + " does not exist!");
         }
 
-        if (dto.getSeatNumber() > flight.getSeats()) {
+        long bookedSeatCount=bookingRepository.countByFlightNumberAndIsCancelled(dto.getFlightNumber(),false);
+
+        if (bookedSeatCount > flight.getSeats()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error: Only " + flight.getSeats() + " seats are available!");
         }
+        int seatNumber = getNextAvailableSeat(dto.getFlightNumber(),flight.getSeats());
+
 
         BookingModel booking = new BookingModel();
-        booking.setSeatNumber(dto.getSeatNumber());
+        booking.setSeatNumber(seatNumber);
         booking.setFlightNumber(dto.getFlightNumber());
         booking.setFirstName(dto.getFirstName());
         booking.setLastName(dto.getLastName());
@@ -71,23 +75,27 @@ public class BookingService {
             return null;
         }
     }
-    public ResponseEntity<String> deleting(Long id){
-        if(bookingRepository.existsById(id)){
-            bookingRepository.deleteById(id);
+    public ResponseEntity<String> deleting(Long id) {
+        if (bookingRepository.existsById(id)) {
+            BookingModel booking = bookingRepository.findById(id).orElse(null);
+            if (booking != null) {
+                booking.setCancelled(true);
+                bookingRepository.save(booking);
 
-            EmailDTO emailDTO=new EmailDTO();
-            emailDTO.setTo(UserContext.getEmail());
-            emailDTO.setSubject("Booking Cancel ");
-            emailDTO.setBody("Hii, your flight booking has been successfully cancelled!!" +
-                    "Thank you for choosing us...");
+                EmailDTO emailDTO = new EmailDTO();
+                emailDTO.setTo(UserContext.getEmail());
+                emailDTO.setSubject("Booking Cancel ");
+                emailDTO.setBody("Hii, your flight booking has been successfully cancelled!!" +
+                        "Thank you for choosing us...");
 
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_QUEUE,emailDTO);
+                rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_QUEUE, emailDTO);
 
 
-            return ResponseEntity.ok("Booking Cancelled!!");
-        }else{
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking Not Found!!!");
-        }
+                return ResponseEntity.ok("Booking Cancelled!!");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking Not Found!!!");
+            }
+        } return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking Not Found!!!");
     }
     public ResponseEntity<List<BookingDTO>> checkIn(String first, String second) {
             List<BookingModel> customers;
@@ -108,5 +116,25 @@ public class BookingService {
 
             return ResponseEntity.ok(ans);
         }
+    private int getNextAvailableSeat(String flightNumber,int seatsForFlight) {
+        List<BookingModel> bookings = bookingRepository.findByFlightNumber(flightNumber);
+
+        for (int i = 1; i <= seatsForFlight; i++) {
+            boolean seatTaken = false;
+
+            for (BookingModel booking : bookings) {
+                if (booking.getSeatNumber() == i && !booking.isCancelled()) {
+                    seatTaken = true;
+                    break;
+                }
+            }
+
+            if (!seatTaken) {
+                return i; // First available seat number
+            }
+        }
+
+       return -1;
+    }
     }
 

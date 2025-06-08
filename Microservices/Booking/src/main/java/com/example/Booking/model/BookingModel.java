@@ -20,6 +20,7 @@ public class BookingModel {
     private String lastName;
     private int age;
     private String gender;
+    private boolean isCancelled = false;
 
     public BookingModel() {
     }
@@ -32,6 +33,17 @@ public class BookingModel {
         this.lastName = lastName;
         this.age = age;
         this.gender = gender;
+    }
+
+    public BookingModel(Long id, int seatNumber, String flightNumber, String firstName, String lastName, int age, String gender, boolean isCancelled) {
+        this.id = id;
+        this.seatNumber = seatNumber;
+        this.flightNumber = flightNumber;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.age = age;
+        this.gender = gender;
+        this.isCancelled = isCancelled;
     }
 
     public Long getId() {
@@ -88,5 +100,13 @@ public class BookingModel {
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public boolean isCancelled() {
+        return isCancelled;
+    }
+
+    public void setCancelled(boolean cancelled) {
+        isCancelled = cancelled;
     }
 }

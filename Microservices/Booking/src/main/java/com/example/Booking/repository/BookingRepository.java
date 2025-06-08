@@ -10,4 +10,8 @@ public interface BookingRepository extends JpaRepository<BookingModel,Long> {
     int countByFlightNumber(String flightNumber);
     List<BookingModel> findByFirstNameAndLastName(String firstName, String lastName);
     List<BookingModel> findByFirstName(String firstName);
+    long countByFlightNumberAndIsCancelled(String flightNumber, boolean isCancelled);
+    List<BookingModel> findByFlightNumber(String flightNumber);
+
+
 }
