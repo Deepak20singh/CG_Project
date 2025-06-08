@@ -17,8 +17,10 @@ public class BookingController {
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
 
-    @PutMapping("/add")
+    @PostMapping("/add")
     public ResponseEntity<String> add(@RequestBody BookingDTO bookingDTO){
+
+        System.out.println(bookingDTO);
         return bookingService.add(bookingDTO);
     }
 

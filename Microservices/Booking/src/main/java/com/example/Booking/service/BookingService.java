@@ -23,12 +23,13 @@ import java.util.stream.Collectors;
 public class BookingService {
     private final BookingRepository bookingRepository;
     private final RabbitTemplate rabbitTemplate;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate ;
 
     @Autowired
-    public BookingService(BookingRepository bookingRepository, RabbitTemplate rabbitTemplate) {
+    public BookingService(BookingRepository bookingRepository, RabbitTemplate rabbitTemplate, RestTemplate restTemplate) {
         this.bookingRepository = bookingRepository;
         this.rabbitTemplate = rabbitTemplate;
+        this.restTemplate = restTemplate;
     }
     public ResponseEntity<String> add(BookingDTO dto) {
         DTO flight = getFlightDetails(dto.getFlightNumber());
@@ -38,17 +39,13 @@ public class BookingService {
                     .body("Error: Flight " + dto.getFlightNumber() + " does not exist!");
         }
 
-        long bookedSeatCount=bookingRepository.countByFlightNumberAndIsCancelled(dto.getFlightNumber(),false);
-
-        if (bookedSeatCount > flight.getSeats()) {
+        if (dto.getSeatNumber() > flight.getSeats()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error: Only " + flight.getSeats() + " seats are available!");
         }
-        int seatNumber = getNextAvailableSeat(dto.getFlightNumber(),flight.getSeats());
-
 
         BookingModel booking = new BookingModel();
-        booking.setSeatNumber(seatNumber);
+        booking.setSeatNumber(dto.getSeatNumber());
         booking.setFlightNumber(dto.getFlightNumber());
         booking.setFirstName(dto.getFirstName());
         booking.setLastName(dto.getLastName());
@@ -57,7 +54,7 @@ public class BookingService {
 
         bookingRepository.save(booking);
         EmailDTO emailDTO = new EmailDTO();
-        emailDTO.setTo(UserContext.getEmail());  
+        emailDTO.setTo(UserContext.getEmail());
         emailDTO.setSubject("Booking Confirmation - " + dto.getFlightNumber());
         emailDTO.setBody("Hi " + dto.getFirstName() + ", your booking for flight " + dto.getFlightNumber() + " is confirmed."+"AT seat:-"+dto.getSeatNumber());
 
@@ -67,14 +64,20 @@ public class BookingService {
         return ResponseEntity.ok("Booking confirmed for Flight: " + dto.getFlightNumber());
     }
 
+
     private DTO getFlightDetails(String flightNumber) {
-        String url = "http://localhost:8081/admin/flightnumber?number=" + flightNumber;
+        String url = "http://fareAdmin/admin/flightnumber?number=" + flightNumber;
         try {
-            return restTemplate.getForObject(url, DTO.class);
+            System.out.println("Calling Flight Admin API: " + url);
+            DTO response = restTemplate.getForObject(url, DTO.class);
+            System.out.println("Response from Flight Admin API: " + response);
+            return response;
         } catch (Exception e) {
+            System.err.println("Exception while calling Flight Admin API: " + e.getMessage());
             return null;
         }
     }
+
     public ResponseEntity<String> deleting(Long id) {
         if (bookingRepository.existsById(id)) {
             BookingModel booking = bookingRepository.findById(id).orElse(null);
